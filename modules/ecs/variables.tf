@@ -14,12 +14,8 @@ variable "app_subnet_ids" {
   type = list(string)
 }
 
-variable "ecs_tasks_security_group_id" {
-  type = string
-}
-
-variable "db_secret_arn" {
-  description = "Secrets Manager ARN holding the raw DB master password (Stage 4 output)."
+variable "db_master_user_secret_arn" {
+  description = "Secrets Manager ARN of the RDS-managed master credentials (Stage 4 output, JSON: {username, password})."
   type        = string
 }
 

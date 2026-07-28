@@ -31,8 +31,9 @@ variable "allocated_storage" {
 }
 
 variable "engine_version" {
-  type    = string
-  default = "16"
+  description = "Major Postgres version only (e.g. \"16\")."
+  type        = string
+  default     = "16"
 }
 
 variable "multi_az" {

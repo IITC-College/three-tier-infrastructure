@@ -1,0 +1,47 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  apply-dev:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_TOKEN_app_terraform_io }}
+
+      - run: terraform init -input=false
+
+      - run: terraform apply -auto-approve -input=false
+
+  apply-prod:
+    needs: apply-dev
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: environments/prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_TOKEN_app_terraform_io }}
+
+      - run: terraform init -input=false
+
+      - run: terraform apply -auto-approve -input=false

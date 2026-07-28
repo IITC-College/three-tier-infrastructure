@@ -2,7 +2,7 @@ terraform {
   cloud {
     organization = "lironefitoussi"
     workspaces {
-      name = "three-tier-dev"
+      name = "three-tier-prod"
     }
   }
 
@@ -21,23 +21,26 @@ provider "aws" {
 module "network" {
   source = "./modules/network"
 
-  name_prefix         = var.name_prefix
-  vpc_cidr            = var.vpc_cidr
-  azs                 = var.azs
-  public_subnet_cidrs = var.public_subnet_cidrs
-  app_subnet_cidrs    = var.app_subnet_cidrs
-  db_subnet_cidrs     = var.db_subnet_cidrs
-  single_nat_gateway  = true
+  name_prefix            = var.name_prefix
+  vpc_cidr                = var.vpc_cidr
+  azs                     = var.azs
+  public_subnet_cidrs     = var.public_subnet_cidrs
+  app_subnet_cidrs        = var.app_subnet_cidrs
+  db_subnet_cidrs         = var.db_subnet_cidrs
+  single_nat_gateway      = false
+  one_nat_gateway_per_az  = true
 }
 
 module "database" {
   source = "./modules/database"
 
-  name_prefix    = var.name_prefix
-  vpc_id         = module.network.vpc_id
-  db_subnet_ids  = module.network.db_subnet_ids
-  db_name        = var.db_name
-  instance_class = var.db_instance_class
+  name_prefix          = var.name_prefix
+  vpc_id               = module.network.vpc_id
+  db_subnet_ids        = module.network.db_subnet_ids
+  db_name              = var.db_name
+  instance_class       = var.db_instance_class
+  multi_az             = true
+  deletion_protection  = true
 }
 
 module "ecs" {
@@ -55,11 +58,6 @@ module "ecs" {
   db_master_username        = module.database.db_master_username
 }
 
-# Cross-module SG rule: modules/ecs's task SG (created by the ECS service
-# submodule) must reach modules/database's RDS SG on 5432. Declared
-# standalone here (not inside either module) because module.ecs depends on
-# module.database's DB endpoint/secret, and this reverse reference would
-# otherwise create a cycle.
 resource "aws_security_group_rule" "db_from_ecs_tasks" {
   type                     = "ingress"
   from_port                = 5432
@@ -67,7 +65,7 @@ resource "aws_security_group_rule" "db_from_ecs_tasks" {
   protocol                 = "tcp"
   security_group_id        = module.database.db_security_group_id
   source_security_group_id = module.ecs.ecs_tasks_security_group_id
-  description              = "Postgres from ECS tasks"
+  description               = "Postgres from ECS tasks"
 }
 
 module "frontend" {
