@@ -2,6 +2,14 @@ output "alb_dns_name" {
   value = module.alb.dns_name
 }
 
+output "alb_arn_suffix" {
+  value = module.alb.arn_suffix
+}
+
+output "target_group_arn_suffix" {
+  value = module.alb.target_groups["backend"].arn_suffix
+}
+
 output "ecr_repository_url" {
   value = aws_ecr_repository.backend.repository_url
 }

@@ -22,25 +22,25 @@ module "network" {
   source = "./modules/network"
 
   name_prefix            = var.name_prefix
-  vpc_cidr                = var.vpc_cidr
-  azs                     = var.azs
-  public_subnet_cidrs     = var.public_subnet_cidrs
-  app_subnet_cidrs        = var.app_subnet_cidrs
-  db_subnet_cidrs         = var.db_subnet_cidrs
-  single_nat_gateway      = false
-  one_nat_gateway_per_az  = true
+  vpc_cidr               = var.vpc_cidr
+  azs                    = var.azs
+  public_subnet_cidrs    = var.public_subnet_cidrs
+  app_subnet_cidrs       = var.app_subnet_cidrs
+  db_subnet_cidrs        = var.db_subnet_cidrs
+  single_nat_gateway     = false
+  one_nat_gateway_per_az = true
 }
 
 module "database" {
   source = "./modules/database"
 
-  name_prefix          = var.name_prefix
-  vpc_id               = module.network.vpc_id
-  db_subnet_ids        = module.network.db_subnet_ids
-  db_name              = var.db_name
-  instance_class       = var.db_instance_class
-  multi_az             = true
-  deletion_protection  = true
+  name_prefix         = var.name_prefix
+  vpc_id              = module.network.vpc_id
+  db_subnet_ids       = module.network.db_subnet_ids
+  db_name             = var.db_name
+  instance_class      = var.db_instance_class
+  multi_az            = true
+  deletion_protection = true
 }
 
 module "ecs" {
@@ -65,7 +65,7 @@ resource "aws_security_group_rule" "db_from_ecs_tasks" {
   protocol                 = "tcp"
   security_group_id        = module.database.db_security_group_id
   source_security_group_id = module.ecs.ecs_tasks_security_group_id
-  description               = "Postgres from ECS tasks"
+  description              = "Postgres from ECS tasks"
 }
 
 module "frontend" {
@@ -93,4 +93,20 @@ module "github_oidc" {
 
   frontend_bucket_arn         = module.frontend.bucket_arn
   cloudfront_distribution_arn = module.frontend.cloudfront_distribution_arn
+}
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  name_prefix = var.name_prefix
+  alarm_email = var.alarm_email
+
+  ecs_cluster_name  = module.ecs.ecs_cluster_name
+  ecs_service_name  = module.ecs.ecs_service_name
+  ecs_desired_count = var.ecs_desired_count
+
+  alb_arn_suffix          = module.ecs.alb_arn_suffix
+  target_group_arn_suffix = module.ecs.target_group_arn_suffix
+
+  db_instance_id = module.database.db_instance_id
 }

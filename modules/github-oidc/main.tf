@@ -25,10 +25,14 @@ data "aws_iam_policy_document" "backend_deploy_trust" {
       values   = ["sts.amazonaws.com"]
     }
 
+    # GitHub appends immutable numeric IDs to the org/repo names in the sub
+    # claim (repo:org@<id>/repo@<id>:ref:...), not the plain "org/repo" form
+    # - confirmed via CloudTrail on a real failed AssumeRoleWithWebIdentity
+    # call. StringLike wildcards the IDs rather than hardcoding them.
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.backend_repo_name}:ref:refs/heads/${var.deploy_branch}"]
+      values   = ["repo:${var.github_org}@*/${var.backend_repo_name}@*:ref:refs/heads/${var.deploy_branch}"]
     }
   }
 }
@@ -120,9 +124,9 @@ data "aws_iam_policy_document" "frontend_deploy_trust" {
     }
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.frontend_repo_name}:ref:refs/heads/${var.deploy_branch}"]
+      values   = ["repo:${var.github_org}@*/${var.frontend_repo_name}@*:ref:refs/heads/${var.deploy_branch}"]
     }
   }
 }

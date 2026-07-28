@@ -61,3 +61,7 @@ output "backend_deploy_role_arn" {
 output "frontend_deploy_role_arn" {
   value = module.github_oidc.frontend_deploy_role_arn
 }
+
+output "sns_alerts_topic_arn" {
+  value = module.monitoring.sns_topic_arn
+}

@@ -96,3 +96,19 @@ module "github_oidc" {
   frontend_bucket_arn         = module.frontend.bucket_arn
   cloudfront_distribution_arn = module.frontend.cloudfront_distribution_arn
 }
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  name_prefix = var.name_prefix
+  alarm_email = var.alarm_email
+
+  ecs_cluster_name  = module.ecs.ecs_cluster_name
+  ecs_service_name  = module.ecs.ecs_service_name
+  ecs_desired_count = var.ecs_desired_count
+
+  alb_arn_suffix          = module.ecs.alb_arn_suffix
+  target_group_arn_suffix = module.ecs.target_group_arn_suffix
+
+  db_instance_id = module.database.db_instance_id
+}

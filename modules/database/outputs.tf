@@ -6,6 +6,10 @@ output "db_instance_endpoint" {
   value = module.rds.db_instance_address
 }
 
+output "db_instance_id" {
+  value = module.rds.db_instance_identifier
+}
+
 output "db_instance_port" {
   value = module.rds.db_instance_port
 }

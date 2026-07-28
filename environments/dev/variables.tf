@@ -62,3 +62,13 @@ variable "deploy_branch" {
   type    = string
   default = "main"
 }
+
+variable "alarm_email" {
+  type    = string
+  default = "lironefitoussi@gmail.com"
+}
+
+variable "ecs_desired_count" {
+  type    = number
+  default = 2
+}

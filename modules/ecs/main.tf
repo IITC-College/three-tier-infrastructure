@@ -195,6 +195,11 @@ module "ecs_service" {
 
   desired_count = var.desired_count
 
+  # Module defaults (min=1) would let target-tracking scale below the
+  # dev floor of desired_count=2 the moment CPU/memory is idle.
+  autoscaling_min_capacity = var.desired_count
+  autoscaling_max_capacity = var.desired_count * 2
+
   create_task_exec_iam_role = true
   task_exec_secret_arns     = [aws_secretsmanager_secret.database_url.arn]
 
