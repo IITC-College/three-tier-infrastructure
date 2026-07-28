@@ -72,3 +72,18 @@ variable "ecs_desired_count" {
   type    = number
   default = 2
 }
+
+variable "domain_name" {
+  type    = string
+  default = "iitc-course.com"
+}
+
+variable "app_subdomain" {
+  type    = string
+  default = "lirone-app"
+}
+
+variable "api_subdomain" {
+  type    = string
+  default = "lirone-api"
+}

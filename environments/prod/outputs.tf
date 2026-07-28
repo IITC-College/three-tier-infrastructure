@@ -65,3 +65,11 @@ output "frontend_deploy_role_arn" {
 output "sns_alerts_topic_arn" {
   value = module.monitoring.sns_topic_arn
 }
+
+output "app_url" {
+  value = "https://${module.domain.app_fqdn}"
+}
+
+output "api_url" {
+  value = "https://${module.domain.api_fqdn}"
+}

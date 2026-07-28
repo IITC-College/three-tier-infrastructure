@@ -2,6 +2,10 @@ output "alb_dns_name" {
   value = module.alb.dns_name
 }
 
+output "alb_zone_id" {
+  value = module.alb.zone_id
+}
+
 output "alb_arn_suffix" {
   value = module.alb.arn_suffix
 }

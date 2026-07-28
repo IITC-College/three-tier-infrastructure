@@ -2,6 +2,18 @@ variable "name_prefix" {
   type = string
 }
 
+variable "enable_https" {
+  description = "Stage 12 (prod only). Must be a plan-time-known literal, not derived from another resource - the ALB listener map's key set (http-only vs http+https) can't depend on a value that's still unknown at plan time."
+  type        = bool
+  default     = false
+}
+
+variable "certificate_arn" {
+  description = "ACM cert (regional) for the ALB's HTTPS listener. Only used when enable_https = true; its value may still be unknown at plan time (e.g. a not-yet-validated ACM cert) since it only ever appears as a map *value*, never as a for_each key."
+  type        = string
+  default     = null
+}
+
 variable "vpc_id" {
   type = string
 }

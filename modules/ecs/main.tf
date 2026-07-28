@@ -49,14 +49,24 @@ module "alb" {
   vpc_id             = var.vpc_id
   subnets            = var.public_subnet_ids
 
-  security_group_ingress_rules = {
-    http = {
-      from_port   = 80
-      to_port     = 80
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-  }
+  security_group_ingress_rules = merge(
+    {
+      http = {
+        from_port   = 80
+        to_port     = 80
+        ip_protocol = "tcp"
+        cidr_ipv4   = "0.0.0.0/0"
+      }
+    },
+    var.enable_https ? {
+      https = {
+        from_port   = 443
+        to_port     = 443
+        ip_protocol = "tcp"
+        cidr_ipv4   = "0.0.0.0/0"
+      }
+    } : {}
+  )
   security_group_egress_rules = {
     all = {
       ip_protocol = "-1"
@@ -64,15 +74,39 @@ module "alb" {
     }
   }
 
-  listeners = {
-    http = {
-      port     = 80
-      protocol = "HTTP"
-      forward = {
-        target_group_key = "backend"
+  # Stage 12 (prod only): HTTP redirects to HTTPS when enable_https = true.
+  # Dev leaves enable_https at its default (false), keeping the plain
+  # HTTP-forward listener from Stage 5. `merge()` (not a ternary over the
+  # whole map) avoids Terraform's object-type-consistency requirement
+  # between the two possible shapes; certificate_arn only ever appears as
+  # a map *value* (fine if still unknown at plan time), never decides
+  # which map *keys* exist (which must be known at plan time).
+  listeners = merge(
+    {
+      http = {
+        port     = 80
+        protocol = "HTTP"
+        forward = var.enable_https ? null : {
+          target_group_key = "backend"
+        }
+        redirect = var.enable_https ? {
+          port        = "443"
+          protocol    = "HTTPS"
+          status_code = "HTTP_301"
+        } : null
       }
-    }
-  }
+    },
+    var.enable_https ? {
+      https = {
+        port            = 443
+        protocol        = "HTTPS"
+        certificate_arn = var.certificate_arn
+        forward = {
+          target_group_key = "backend"
+        }
+      }
+    } : {}
+  )
 
   target_groups = {
     backend = {
