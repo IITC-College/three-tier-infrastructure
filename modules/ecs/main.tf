@@ -3,6 +3,9 @@ data "aws_region" "current" {}
 resource "aws_ecr_repository" "backend" {
   name                 = "${var.name_prefix}-backend"
   image_tag_mutability = "MUTABLE"
+  # Otherwise `terraform destroy` fails outright once any image has been
+  # pushed (RepositoryNotEmptyException) - hit this for real tearing dev down.
+  force_delete = true
 
   image_scanning_configuration {
     scan_on_push = true
@@ -48,6 +51,13 @@ module "alb" {
   load_balancer_type = "application"
   vpc_id             = var.vpc_id
   subnets            = var.public_subnet_ids
+
+  # terraform-aws-modules/alb defaults this true; without it explicitly
+  # false, `terraform destroy` fails outright
+  # (OperationNotPermitted: deletion protection is enabled) - hit this
+  # for real tearing dev down. Stage 12 could still add its own explicit
+  # override for prod if that's ever wanted there.
+  enable_deletion_protection = false
 
   security_group_ingress_rules = merge(
     {

@@ -1,5 +1,9 @@
 resource "aws_s3_bucket" "frontend" {
   bucket = "${var.name_prefix}-frontend-${data.aws_caller_identity.current.account_id}"
+  # Otherwise `terraform destroy` fails outright once Stage 9's CI has
+  # synced a build to it (BucketNotEmpty) - hit this for real tearing dev
+  # down.
+  force_destroy = true
 }
 
 data "aws_caller_identity" "current" {}
